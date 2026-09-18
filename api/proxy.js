@@ -1,3 +1,5 @@
+// ✅ Jira Proxy Backend - Environment Variables Configured
+// JIRA_API_TOKEN, JIRA_EMAIL, JIRA_SITE are set in Vercel environment
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,32 +20,24 @@ export default async function handler(req, res) {
   const API_TOKEN = process.env.JIRA_API_TOKEN;
 
   if (!API_TOKEN) {
-    return res.status(500).json({ error: 'JIRA_API_TOKEN not configured' });
+    return res.status(401).json({ error: 'JIRA_API_TOKEN not configured' });
   }
 
-  try {
-    const auth = Buffer.from(`${EMAIL}:${API_TOKEN}`).toString('base64');
-    const url = `https://${JIRA_SITE}/rest/api/3${endpoint}`;
+  const auth = Buffer.from(`${EMAIL}:${API_TOKEN}`).toString('base64');
 
-    const response = await fetch(url, {
+  try {
+    const response = await fetch(`https://${JIRA_SITE}/rest/api/3${endpoint}`, {
       method: 'GET',
       headers: {
         'Authorization': `Basic ${auth}`,
-        'Accept': 'application/json',
         'Content-Type': 'application/json'
       }
     });
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: `Jira API returned ${response.status}: ${response.statusText}`
-      });
-    }
-
     const data = await response.json();
-    res.status(200).json(data);
+    return res.status(response.status).json(data);
   } catch (error) {
     console.error('Proxy error:', error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
