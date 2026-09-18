@@ -4,6 +4,6 @@
   "description": "RoadMap dashboard for CarbonZap - Real-time Jira épicos visualization",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   }
 }
