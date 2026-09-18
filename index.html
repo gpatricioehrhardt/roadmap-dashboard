@@ -269,8 +269,7 @@
         // Configuração
         const JIRA_SITE = 'carbontech-team.atlassian.net';
         const JIRA_PROJECT = 'CAW';
-        const API_TOKEN = 'ATATT3xFfGF0uJ_K8gBa0-iK7ziZWB5St6qHTMBNTUFffKsyvgMU8XC1OtrtOHbtrszAt2XwzbcgccC9X0NSnRozFx-diRllgxymg9DoKUKv88PmqpSLWY2fFZ5kmTb7eR8iIpUbmyVHIRg0QduK77hIP-WdU6FGNBRA3eG0pp0aFdOBAGey0iY=878FACA0';
-        const EMAIL = 'gisele.patricio@carbontech.digital';
+        const PROXY_BASE = window.location.origin;
 
         // Field IDs
         const FIELDS = {
@@ -295,20 +294,15 @@
             '10322': 'Analisar'
         };
 
-        // Função para fazer requisição à API do Jira
+        // Função para fazer requisição via proxy
         async function jiraFetch(endpoint) {
-            const auth = btoa(`${EMAIL}:${API_TOKEN}`);
             try {
-                const response = await fetch(`https://${JIRA_SITE}/rest/api/3${endpoint}`, {
-                    headers: {
-                        'Authorization': `Basic ${auth}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const url = `${PROXY_BASE}/api/proxy?endpoint=${encodeURIComponent(endpoint)}`;
+                const response = await fetch(url);
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    const error = await response.json();
+                    throw new Error(error.error || `HTTP ${response.status}`);
                 }
 
                 return await response.json();
@@ -321,7 +315,8 @@
         // Função para calcular progresso de um épico
         async function getEpicProgress(epicKey) {
             try {
-                const response = await jiraFetch(`/search?jql=parent="${epicKey}" OR "Epic Link"="${epicKey}"&fields=status,statusCategory&maxResults=100`);
+                const endpoint = `/search?jql=parent="${epicKey}" OR "Epic Link"="${epicKey}"&fields=status,statusCategory&maxResults=100`;
+                const response = await jiraFetch(endpoint);
                 
                 if (!response.issues || response.issues.length === 0) {
                     return { done: 0, total: 0, percent: 0 };
@@ -393,7 +388,8 @@
 
             try {
                 // Buscar todos os épicos do projeto
-                const response = await jiraFetch(`/search?jql=type=Epic AND project=${JIRA_PROJECT}&fields=${FIELDS.area},${FIELDS.moscow},${FIELDS.status},summary&maxResults=100`);
+                const endpoint = `/search?jql=type=Epic AND project=${JIRA_PROJECT}&fields=${FIELDS.area},${FIELDS.moscow},${FIELDS.status},summary&maxResults=100`;
+                const response = await jiraFetch(endpoint);
 
                 if (!response.issues || response.issues.length === 0) {
                     content.innerHTML = '<div class="empty-state"><p>Nenhum épico encontrado</p></div>';

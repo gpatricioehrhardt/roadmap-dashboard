@@ -1,0 +1,9 @@
+{
+  "name": "roadmap-dashboard",
+  "version": "1.0.0",
+  "description": "RoadMap dashboard for CarbonZap - Real-time Jira épicos visualization",
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  }
+}
